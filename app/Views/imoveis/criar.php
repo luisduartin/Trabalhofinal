@@ -41,7 +41,7 @@
 
       <div>
         <label>Finalidade</label>
-        <select name="finalidade" required>
+        <select name="finalidade" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
           <option value="">Selecione...</option>
           <option value="venda">Venda</option>
           <option value="aluguel">Aluguel</option>
@@ -54,18 +54,22 @@
           <label>Tipo de Imóvel</label>
           <select name="tipo_imovel_id" required>
             <option value="">Selecione...</option>
-            <?php foreach($tipos as $tipo): ?>
-              <option value="<?= $tipo['id'] ?>"><?= esc($tipo['nome']) ?></option>
-            <?php endforeach; ?>
+            <?php if(!empty($tipos)): ?>
+              <?php foreach($tipos as $tipo): ?>
+                <option value="<?= $tipo['id'] ?>"><?= esc($tipo['nome']) ?></option>
+              <?php endforeach; ?>
+            <?php endif; ?>
           </select>
         </div>
         <div>
           <label>Bairro</label>
           <select name="bairro_id" required>
             <option value="">Selecione...</option>
-            <?php foreach($bairros as $bairro): ?>
-              <option value="<?= $bairro['id'] ?>"><?= esc($bairro['nome']) ?></option>
-            <?php endforeach; ?>
+            <?php if(!empty($bairros)): ?>
+              <?php foreach($bairros as $bairro): ?>
+                <option value="<?= $bairro['id'] ?>"><?= esc($bairro['nome']) ?></option>
+              <?php endforeach; ?>
+            <?php endif; ?>
           </select>
         </div>
       </div>

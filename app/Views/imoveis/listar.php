@@ -18,7 +18,7 @@
     <form method="get" action="<?= site_url('imoveis') ?>" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:20px; align-items:end;">
       <div>
         <label>Bairro</label>
-        <select name="bairro">
+        <select name="bairro" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
           <option value="">Todos os bairros</option>
           <?php if(!empty($bairros)): ?>
             <?php foreach($bairros as $bairro): ?>
@@ -26,12 +26,14 @@
                 <?= esc($bairro['nome']) ?>
               </option>
             <?php endforeach; ?>
+          <?php else: ?>
+            <option value="" disabled>Nenhum bairro cadastrado</option>
           <?php endif; ?>
         </select>
       </div>
       <div>
         <label>Tipo de Imóvel</label>
-        <select name="tipo">
+        <select name="tipo" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
           <option value="">Todos os tipos</option>
           <?php if(!empty($tipos)): ?>
             <?php foreach($tipos as $tipo): ?>
@@ -39,12 +41,14 @@
                 <?= esc($tipo['nome']) ?>
               </option>
             <?php endforeach; ?>
+          <?php else: ?>
+            <option value="" disabled>Nenhum tipo cadastrado</option>
           <?php endif; ?>
         </select>
       </div>
       <div>
         <label>Finalidade</label>
-        <select name="finalidade">
+        <select name="finalidade" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
           <option value="">Todas</option>
           <option value="venda" <?= (isset($filtroFinalidade) && $filtroFinalidade == 'venda') ? 'selected' : '' ?>>Venda</option>
           <option value="aluguel" <?= (isset($filtroFinalidade) && $filtroFinalidade == 'aluguel') ? 'selected' : '' ?>>Aluguel</option>

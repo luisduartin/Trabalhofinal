@@ -175,18 +175,69 @@ Classes que representam tabelas do banco e facilitam operações de banco de dad
 **O que são:**
 Arquivos que criam/modificam a estrutura do banco de dados de forma versionada.
 
-**Principais Migrations:**
-- `CreateUsuariosTable.php` - Cria tabela de usuários
-- `CreateBairrosTable.php` - Cria tabela de bairros
-- `CreateTiposImoveisTable.php` - Cria tabela de tipos de imóveis
-- `CreateImoveisTable.php` - Cria tabela de imóveis
-- `CreateFotosTable.php` - Cria tabela de fotos
-- `CreateLogsTable.php` - Cria tabela de logs
+**Migration Principal:**
+- `2025-11-17-000000_CreateInitialSchema.php` - **Migration unificada que cria TODAS as tabelas de uma vez**
+
+**O que faz a migration principal:**
+1. Cria a tabela `usuarios` e insere usuário administrador padrão
+2. Cria a tabela `bairros` e insere 23 bairros pré-definidos
+3. Cria a tabela `tipos_imoveis` e insere 3 tipos pré-definidos
+4. Cria a tabela `imoveis`
+5. Cria a tabela `fotos_imoveis`
+6. Cria a tabela `logs`
+
+**Estrutura da Migration:**
+```php
+class CreateInitialSchema extends Migration
+{
+    public function up()
+    {
+        $this->createUsuariosTable();      // Cria tabela + insere admin padrão
+        $this->createBairrosTable();      // Cria tabela + insere 23 bairros
+        $this->createTiposImoveisTable(); // Cria tabela + insere 3 tipos
+        $this->createImoveisTable();      // Cria tabela de imóveis
+        $this->createFotosImoveisTable(); // Cria tabela de fotos
+        $this->createLogsTable();         // Cria tabela de logs
+    }
+}
+```
+
+**Dados Pré-definidos Inseridos:**
+
+1. **Usuário Administrador Padrão:**
+   - Email: `admin@sistema.com`
+   - Senha: `123456`
+   - Tipo: `admin`
+   - Nome: `Administrador`
+   - ⚠️ **IMPORTANTE:** A senha é criptografada com `password_hash()` antes de ser inserida
+
+2. **23 Bairros Pré-definidos:**
+   - Alvorada, Arco-íris, Bela Vista, Centro, Erica, Esperança, Fátima, Fritsch, Jaciandi, Jardim Paraguai, Kuhn, Medianeira, Morro Grosse, Pavão, Piratini, Planalto, São Jorge, Serrano, Timbará, Trentini, Vila Nova, Zona Norte, Alto Paraíso
+
+3. **3 Tipos de Imóveis Pré-definidos:**
+   - Apartamento
+   - Casa
+   - Terreno
 
 **Como executar:**
 ```bash
+# No Windows com XAMPP:
+C:\xampp\php\php.exe spark migrate
+
+# Ou se PHP estiver no PATH:
 php spark migrate
 ```
+
+**Como fazer rollback (desfazer):**
+```bash
+C:\xampp\php\php.exe spark migrate:rollback
+```
+
+**Vantagens da Migration Unificada:**
+- Cria todo o banco de dados de uma vez
+- Insere dados iniciais automaticamente
+- Facilita setup em novos ambientes
+- Garante consistência dos dados iniciais
 
 ---
 
@@ -330,22 +381,79 @@ Mesma lógica da edição - corretor só pode excluir seus próprios imóveis.
 
 1. **Usuário acessa:** `/admin/imoveis/create`
 2. **Rota:** Verifica se está autenticado (filtro `authCorretor`)
-3. **Controller:** `Imoveis::create()` mostra o formulário
-4. **Usuário preenche** e envia formulário
-5. **Rota:** `/admin/imoveis` (POST) → `Imoveis::store()`
-6. **Controller:**
+3. **Controller:** `Imoveis::create()` busca bairros e tipos, mostra o formulário
+4. **Formulário exibe:**
+   - Campo de título
+   - Campo de descrição
+   - Campos de preço (venda e aluguel)
+   - Campo de finalidade (venda/aluguel/ambos)
+   - **Select de Bairro** (com 23 opções pré-definidas)
+   - **Select de Tipo de Imóvel** (Apartamento, Casa, Terreno)
+5. **Usuário preenche** e envia formulário
+6. **Rota:** `/admin/imoveis` (POST) → `Imoveis::store()`
+7. **Controller:**
+   - Recebe `bairro_id` e `tipo_imovel_id` do formulário
    - Valida dados
    - Insere no banco: `$this->model->insert($data)`
    - Registra log: `registrar_log('CREATE')`
    - Redireciona com mensagem de sucesso
-7. **Log é salvo** na tabela `logs` com:
+8. **Log é salvo** na tabela `logs` com:
    - `usuario_id` = ID do usuário logado
    - `acao` = 'CREATE'
    - `created_at` = data/hora atual
 
+**Campos do Formulário de Criação:**
+- `titulo` - Título do imóvel (obrigatório)
+- `descricao` - Descrição detalhada (obrigatório)
+- `preco_venda` - Preço de venda (opcional)
+- `preco_aluguel` - Preço de aluguel (opcional)
+- `finalidade` - Venda, Aluguel ou Ambos (obrigatório)
+- `bairro_id` - ID do bairro selecionado (obrigatório)
+- `tipo_imovel_id` - ID do tipo selecionado (obrigatório)
+- `usuario_id` - ID do usuário logado (automático)
+
 ---
 
-## 6. Como o Helper é Carregado
+## 6. Identidade Visual e Templates
+
+### 6.1 Nome da Empresa
+
+**Nome:** `LuNa Prime Imóveis`
+
+**Onde aparece:**
+- Cabeçalho de navegação (todas as páginas)
+- Título padrão das páginas (quando não especificado)
+- Rodapé (copyright)
+- Página de login
+
+**Arquivos modificados:**
+- `app/Views/templates/header.php` - Cabeçalho e título
+- `app/Views/templates/footer.php` - Rodapé
+- `app/Views/auth/login.php` - Título da página de login
+
+### 6.2 Estrutura de Templates
+
+**Header (`templates/header.php`):**
+- Define estilos CSS globais
+- Cria barra de navegação com nome da empresa
+- Menu de navegação dinâmico (muda conforme usuário logado)
+- Links: Início, Imóveis, Cadastrar Corretor (apenas admin), Sair/Entrar
+
+**Footer (`templates/footer.php`):**
+- Rodapé com copyright
+- Mostra ano atual dinamicamente
+- Nome da empresa: "LuNa Prime Imóveis"
+
+**Como usar:**
+```php
+<?= view('templates/header', ['title' => 'Título da Página']) ?>
+// Conteúdo da página
+<?= view('templates/footer') ?>
+```
+
+---
+
+## 7. Como o Helper é Carregado
 
 **No arquivo:** `app/Config/Autoload.php`
 
@@ -359,7 +467,81 @@ public $helpers = ['log'];
 
 ---
 
-## 7. Resumo das Funcionalidades
+## 8. Formulário de Criação de Imóveis
+
+### 8.1 Campos do Formulário
+
+**Localização:** `app/Views/imoveis/criar.php`
+
+**Campos disponíveis:**
+
+1. **Título do Imóvel** (obrigatório)
+   - Campo de texto livre
+   - Exemplo: "Casa espaçosa com 3 quartos"
+
+2. **Descrição** (obrigatório)
+   - Campo de texto longo (textarea)
+   - Descrição detalhada do imóvel
+
+3. **Preço de Venda** (opcional)
+   - Campo numérico com decimais
+   - Formato: R$ 0.00
+
+4. **Preço de Aluguel** (opcional)
+   - Campo numérico com decimais
+   - Formato: R$ 0.00
+
+5. **Finalidade** (obrigatório)
+   - Select com opções:
+     - Venda
+     - Aluguel
+     - Venda e Aluguel
+
+6. **Tipo de Imóvel** (obrigatório)
+   - Select com tipos pré-definidos:
+     - Apartamento
+     - Casa
+     - Terreno
+   - Dados carregados do banco (tabela `tipos_imoveis`)
+
+7. **Bairro** (obrigatório)
+   - Select com 23 bairros pré-definidos
+   - Dados carregados do banco (tabela `bairros`)
+   - Lista completa: Alvorada, Arco-íris, Bela Vista, Centro, Erica, Esperança, Fátima, Fritsch, Jaciandi, Jardim Paraguai, Kuhn, Medianeira, Morro Grosse, Pavão, Piratini, Planalto, São Jorge, Serrano, Timbará, Trentini, Vila Nova, Zona Norte, Alto Paraíso
+
+### 8.2 Como os Dados são Carregados
+
+**No Controller (`Imoveis::create()`):**
+```php
+// Busca todos os bairros
+$dados['bairros'] = $this->bairroModel->findAll();
+
+// Busca todos os tipos de imóveis
+$dados['tipos'] = $this->tipoModel->findAll();
+
+// Passa para a view
+echo view('imoveis/criar', $dados);
+```
+
+**Na View:**
+```php
+<select name="bairro_id" required>
+    <option value="">Selecione...</option>
+    <?php foreach($bairros as $bairro): ?>
+        <option value="<?= $bairro['id'] ?>"><?= esc($bairro['nome']) ?></option>
+    <?php endforeach; ?>
+</select>
+```
+
+### 8.3 Validação
+
+- Campos obrigatórios: título, descrição, finalidade, bairro_id, tipo_imovel_id
+- Campos opcionais: preco_venda, preco_aluguel
+- `usuario_id` é preenchido automaticamente com o ID do usuário logado
+
+---
+
+## 9. Resumo das Funcionalidades
 
 ### ✅ Login e Autenticação
 - **Onde:** `Auth.php`
@@ -375,7 +557,7 @@ public $helpers = ['log'];
 
 ---
 
-## 8. Perguntas que o Professor Pode Fazer
+## 10. Perguntas que o Professor Pode Fazer
 
 ### "Como funciona o sistema de logs?"
 - Tabela `logs` armazena ações
@@ -410,26 +592,31 @@ public $helpers = ['log'];
 
 ---
 
-## 9. Arquivos Importantes do Sistema de Logs
+## 11. Arquivos Importantes do Sistema de Logs
 
-1. **Migration:** `app/Database/Migrations/CreateLogsTable.php`
-   - Cria a tabela no banco
+1. **Migration Principal:** `app/Database/Migrations/2025-11-17-000000_CreateInitialSchema.php`
+   - Cria TODAS as tabelas do sistema, incluindo `logs`
+   - Método `createLogsTable()` cria a estrutura da tabela de logs
 
 2. **Model:** `app/Models/LogModel.php`
    - Interage com a tabela logs
+   - Permite inserir, consultar e manipular logs
 
 3. **Helper:** `app/Helpers/log_helper.php`
    - Função `registrar_log($acao)`
+   - Simplifica o registro de logs
 
 4. **Autoload:** `app/Config/Autoload.php`
    - Carrega o helper automaticamente
+   - Permite usar `registrar_log()` sem chamar `helper('log')`
 
 5. **Controllers:** Todos os controllers
-   - Chamam `registrar_log()` após ações
+   - Chamam `registrar_log()` após ações importantes
+   - Exemplos: `Imoveis.php`, `Auth.php`, `Bairros.php`, etc.
 
 ---
 
-## 10. Exemplo Prático Completo
+## 12. Exemplo Prático Completo
 
 **Cenário:** Usuário cria um imóvel
 
@@ -447,7 +634,7 @@ public $helpers = ['log'];
 
 ---
 
-## 11. Consultas Úteis no Banco
+## 13. Consultas Úteis no Banco
 
 ```sql
 -- Ver todos os logs
@@ -467,7 +654,7 @@ GROUP BY usuario_id, acao;
 
 ---
 
-## 12. Diferenças entre Admin e Corretor
+## 14. Diferenças entre Admin e Corretor
 
 | Funcionalidade | Admin | Corretor |
 |----------------|-------|----------|
@@ -481,7 +668,7 @@ GROUP BY usuario_id, acao;
 
 ---
 
-## 13. Estrutura de Dados do Log
+## 15. Estrutura de Dados do Log
 
 **Exemplo de registro na tabela `logs`:**
 
@@ -494,7 +681,7 @@ GROUP BY usuario_id, acao;
 
 ---
 
-## 14. Por que Usar Helper?
+## 16. Por que Usar Helper?
 
 **Sem helper (repetitivo):**
 ```php
@@ -520,7 +707,7 @@ registrar_log('CREATE');
 
 ---
 
-## 15. Fluxo Completo do Sistema
+## 17. Fluxo Completo do Sistema
 
 ```
 1. Usuário faz login
@@ -551,7 +738,7 @@ registrar_log('CREATE');
 
 ---
 
-## 16. Conceitos Importantes
+## 18. Conceitos Importantes
 
 ### MVC (Model-View-Controller)
 - **Model:** Acessa banco de dados (`LogModel`, `ImovelModel`)
@@ -575,7 +762,7 @@ registrar_log('CREATE');
 
 ---
 
-## 17. Respostas Rápidas para o Professor
+## 19. Respostas Rápidas para o Professor
 
 **"O que é a tabela de logs?"**
 - Tabela que armazena todas as ações dos usuários (CREATE, UPDATE, DELETE, LOGIN, LOGOUT) com usuário e data/hora.
@@ -598,15 +785,27 @@ registrar_log('CREATE');
 **"Como funciona a autenticação?"**
 - `Auth::processLogin()` verifica email/senha, cria sessão com dados do usuário. Filtros (`authAdmin`, `authCorretor`) protegem rotas verificando a sessão.
 
+**"O que é a migration unificada?"**
+- A migration `CreateInitialSchema.php` cria todas as tabelas de uma vez e insere dados iniciais (usuário admin, 23 bairros, 3 tipos de imóveis). Facilita o setup do sistema.
+
+**"Quais dados já vêm pré-definidos?"**
+- 1 usuário admin (admin@sistema.com / 123456), 23 bairros da região, e 3 tipos de imóveis (Apartamento, Casa, Terreno). Todos inseridos automaticamente na migration.
+
+**"Como funciona o formulário de criação de imóveis?"**
+- O controller busca bairros e tipos do banco, passa para a view, que exibe selects. O usuário seleciona e envia. O controller recebe os IDs (`bairro_id` e `tipo_imovel_id`) e salva no banco.
+
+**"Onde aparece o nome 'LuNa Prime Imóveis'?"**
+- No cabeçalho de navegação, no título padrão das páginas, no rodapé (copyright) e na página de login. Definido nos templates `header.php` e `footer.php`.
+
 ---
 
-## 18. Estrutura de Arquivos do Sistema de Logs
+## 20. Estrutura de Arquivos do Sistema de Logs
 
 ```
 app/
 ├── Database/
 │   └── Migrations/
-│       └── CreateLogsTable.php    ← Cria a tabela logs
+│       └── 2025-11-17-000000_CreateInitialSchema.php  ← Cria TODAS as tabelas (incluindo logs)
 ├── Models/
 │   └── LogModel.php               ← Model para acessar tabela logs
 ├── Helpers/
@@ -615,9 +814,11 @@ app/
     └── Autoload.php               ← Carrega o helper automaticamente
 ```
 
+**Nota:** A migration principal `CreateInitialSchema.php` cria todas as tabelas de uma vez, incluindo a tabela `logs` através do método `createLogsTable()`.
+
 ---
 
-## 19. Código SQL da Tabela
+## 21. Código SQL da Tabela
 
 ```sql
 CREATE TABLE `logs` (
@@ -643,21 +844,143 @@ CREATE TABLE `logs` (
 
 ---
 
-## 20. Checklist para a Apresentação
+## 22. Dados Iniciais do Sistema
+
+### 22.1 Usuário Padrão
+
+**Credenciais de Acesso:**
+- **Email:** `admin@sistema.com`
+- **Senha:** `123456`
+- **Tipo:** `admin`
+- **Nome:** `Administrador`
+
+**Como foi criado:**
+- Inserido automaticamente na migration `CreateInitialSchema`
+- Senha criptografada com `password_hash('123456', PASSWORD_DEFAULT)`
+- Disponível imediatamente após executar `php spark migrate`
+
+**⚠️ Importante:**
+- Este é o usuário principal do sistema
+- Tem acesso total (admin)
+- Pode cadastrar corretores
+- Pode gerenciar bairros e tipos de imóveis
+
+### 22.2 Bairros Pré-definidos
+
+**Total:** 23 bairros
+
+**Lista completa:**
+1. Alvorada
+2. Arco-íris
+3. Bela Vista
+4. Centro
+5. Erica
+6. Esperança
+7. Fátima
+8. Fritsch
+9. Jaciandi
+10. Jardim Paraguai
+11. Kuhn
+12. Medianeira
+13. Morro Grosse
+14. Pavão
+15. Piratini
+16. Planalto
+17. São Jorge
+18. Serrano
+19. Timbará
+20. Trentini
+21. Vila Nova
+22. Zona Norte
+23. Alto Paraíso
+
+**Como foram criados:**
+- Inseridos automaticamente na migration
+- Disponíveis imediatamente após executar a migration
+- Não é necessário cadastrar manualmente
+
+### 22.3 Tipos de Imóveis Pré-definidos
+
+**Total:** 3 tipos
+
+1. **Apartamento**
+2. **Casa**
+3. **Terreno**
+
+**Como foram criados:**
+- Inseridos automaticamente na migration
+- Disponíveis imediatamente após executar a migration
+- Não é necessário cadastrar manualmente
+
+**Uso no formulário:**
+- Aparecem como opções no select "Tipo de Imóvel"
+- Obrigatório selecionar um tipo ao criar imóvel
+
+---
+
+## 23. Checklist para a Apresentação
 
 ✅ Entender o que é a tabela de logs
 ✅ Saber como funciona o helper `registrar_log()`
 ✅ Explicar onde os logs são registrados
 ✅ Entender como funciona autenticação
 ✅ Saber como funcionam as regras de acesso (corretor)
-✅ Entender o que é Migration
+✅ Entender o que é Migration e a migration unificada
 ✅ Saber o que é Model e Helper
 ✅ Entender a estrutura MVC
 ✅ Saber explicar o fluxo de uma ação completa
+✅ Conhecer os dados pré-definidos (usuário, bairros, tipos)
+✅ Entender o formulário de criação de imóveis
+✅ Saber sobre a identidade visual (LuNa Prime Imóveis)
+
+---
+
+## 24. Informações Adicionais Importantes
+
+### 24.1 Primeiro Acesso ao Sistema
+
+**Após executar a migration:**
+1. Acesse a página de login
+2. Use as credenciais padrão:
+   - Email: `admin@sistema.com`
+   - Senha: `123456`
+3. Você terá acesso completo como administrador
+
+### 24.2 Comandos Úteis
+
+**Executar migration:**
+```bash
+C:\xampp\php\php.exe spark migrate
+```
+
+**Fazer rollback (desfazer migration):**
+```bash
+C:\xampp\php\php.exe spark migrate:rollback
+```
+
+**Verificar se PHP está no PATH:**
+- Se não estiver, use o caminho completo: `C:\xampp\php\php.exe`
+- Ou adicione `C:\xampp\php` ao PATH do Windows
+
+### 24.3 Estrutura de Dados do Banco
+
+**Tabelas criadas pela migration:**
+1. `usuarios` - Usuários do sistema (admin e corretores)
+2. `bairros` - 23 bairros pré-definidos
+3. `tipos_imoveis` - 3 tipos pré-definidos (Apartamento, Casa, Terreno)
+4. `imoveis` - Imóveis cadastrados
+5. `fotos_imoveis` - Fotos dos imóveis
+6. `logs` - Logs de ações do sistema
+
+**Dados iniciais:**
+- 1 usuário admin (admin@sistema.com)
+- 23 bairros
+- 3 tipos de imóveis
 
 ---
 
 **Dica:** Pratique explicar em voz alta cada parte do sistema. Isso ajuda a fixar o conhecimento!
+
 
 
 

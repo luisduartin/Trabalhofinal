@@ -34,8 +34,22 @@ class Imoveis extends Controller
             $filtroFinalidade = $this->request->getGet('finalidade');
 
             $dados['imoveis'] = $this->model->getImoveisComDetalhes($filtroBairro, $filtroTipo, $filtroFinalidade) ?? [];
-            $dados['bairros'] = $this->bairroModel->findAll() ?? [];
-            $dados['tipos'] = $this->tipoModel->findAll() ?? [];
+            
+            // Busca bairros e tipos com tratamento de erro
+            try {
+                $dados['bairros'] = $this->bairroModel->findAll() ?? [];
+            } catch (\Exception $e) {
+                log_message('error', 'Erro ao buscar bairros: ' . $e->getMessage());
+                $dados['bairros'] = [];
+            }
+            
+            try {
+                $dados['tipos'] = $this->tipoModel->findAll() ?? [];
+            } catch (\Exception $e) {
+                log_message('error', 'Erro ao buscar tipos: ' . $e->getMessage());
+                $dados['tipos'] = [];
+            }
+            
             $dados['filtroBairro'] = $filtroBairro ?? null;
             $dados['filtroTipo'] = $filtroTipo ?? null;
             $dados['filtroFinalidade'] = $filtroFinalidade ?? null;
@@ -77,8 +91,20 @@ class Imoveis extends Controller
 
     public function create()
     {
-        $dados['bairros'] = $this->bairroModel->findAll();
-        $dados['tipos'] = $this->tipoModel->findAll();
+        try {
+            $dados['bairros'] = $this->bairroModel->findAll() ?? [];
+        } catch (\Exception $e) {
+            log_message('error', 'Erro ao buscar bairros: ' . $e->getMessage());
+            $dados['bairros'] = [];
+        }
+        
+        try {
+            $dados['tipos'] = $this->tipoModel->findAll() ?? [];
+        } catch (\Exception $e) {
+            log_message('error', 'Erro ao buscar tipos: ' . $e->getMessage());
+            $dados['tipos'] = [];
+        }
+        
         echo view('imoveis/criar', $dados);
     }
 
@@ -115,8 +141,21 @@ class Imoveis extends Controller
         }
 
         $dados['imovel'] = $imovel;
-        $dados['bairros'] = $this->bairroModel->findAll();
-        $dados['tipos'] = $this->tipoModel->findAll();
+        
+        try {
+            $dados['bairros'] = $this->bairroModel->findAll() ?? [];
+        } catch (\Exception $e) {
+            log_message('error', 'Erro ao buscar bairros: ' . $e->getMessage());
+            $dados['bairros'] = [];
+        }
+        
+        try {
+            $dados['tipos'] = $this->tipoModel->findAll() ?? [];
+        } catch (\Exception $e) {
+            log_message('error', 'Erro ao buscar tipos: ' . $e->getMessage());
+            $dados['tipos'] = [];
+        }
+        
         echo view('imoveis/editar', $dados);
     }
 

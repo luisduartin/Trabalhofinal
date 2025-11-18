@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title><?= isset($title) ? esc($title) : 'Sistema Imóveis' ?></title>
+    <title><?= isset($title) ? esc($title) : 'LuNa Prime Imóveis' ?></title>
     <style>
         * { box-sizing: border-box; }
         body { 
@@ -119,7 +119,7 @@
 </head>
 <body>
 <nav>
-    <div>Sistema Imóveis</div>
+    <div>LuNa Prime Imóveis</div>
     <div>
         <?php helper('url'); ?>
         <a href="<?= site_url('/') ?>">Início</a>

@@ -41,7 +41,7 @@
 
       <div>
         <label>Finalidade</label>
-        <select name="finalidade" required>
+        <select name="finalidade" required style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
           <option value="venda" <?= $imovel['finalidade'] === 'venda' ? 'selected' : '' ?>>Venda</option>
           <option value="aluguel" <?= $imovel['finalidade'] === 'aluguel' ? 'selected' : '' ?>>Aluguel</option>
           <option value="ambos" <?= $imovel['finalidade'] === 'ambos' ? 'selected' : '' ?>>Venda e Aluguel</option>
@@ -52,17 +52,23 @@
         <div>
           <label>Tipo de Imóvel</label>
           <select name="tipo_imovel_id" required>
-            <?php foreach ($tipos as $tipo): ?>
-              <option value="<?= $tipo['id'] ?>" <?= $tipo['id'] == $imovel['tipo_imovel_id'] ? 'selected' : '' ?>><?= esc($tipo['nome']) ?></option>
-            <?php endforeach; ?>
+            <option value="">Selecione...</option>
+            <?php if(!empty($tipos)): ?>
+              <?php foreach ($tipos as $tipo): ?>
+                <option value="<?= $tipo['id'] ?>" <?= $tipo['id'] == $imovel['tipo_imovel_id'] ? 'selected' : '' ?>><?= esc($tipo['nome']) ?></option>
+              <?php endforeach; ?>
+            <?php endif; ?>
           </select>
         </div>
         <div>
           <label>Bairro</label>
           <select name="bairro_id" required>
-            <?php foreach ($bairros as $bairro): ?>
-              <option value="<?= $bairro['id'] ?>" <?= $bairro['id'] == $imovel['bairro_id'] ? 'selected' : '' ?>><?= esc($bairro['nome']) ?></option>
-            <?php endforeach; ?>
+            <option value="">Selecione...</option>
+            <?php if(!empty($bairros)): ?>
+              <?php foreach ($bairros as $bairro): ?>
+                <option value="<?= $bairro['id'] ?>" <?= $bairro['id'] == $imovel['bairro_id'] ? 'selected' : '' ?>><?= esc($bairro['nome']) ?></option>
+              <?php endforeach; ?>
+            <?php endif; ?>
           </select>
         </div>
       </div>
